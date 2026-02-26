@@ -1,0 +1,7 @@
+{
+  "name": "Database management system",
+  "description": "A high-fidelity conversational dashboard and spreadsheet application powered by Gemini Live API. Features voice-controlled generation of images, videos, emails, and data sheets.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
