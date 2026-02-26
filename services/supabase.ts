@@ -6,15 +6,13 @@ if (!supabaseAnonKey) {
     throw new Error('Missing VITE_SUPABASE_ANON_KEY in .env');
 }
 
-// ── Use Vite proxy to bypass DNS issues ─────────────────────────────────────
-// In development, requests go through the Vite proxy at /supabase-api
-// which routes them to the correct IP. In production, use the real URL.
-const isDev = import.meta.env.DEV;
-const supabaseUrl = isDev
-    ? window.location.origin + '/supabase-api'
-    : import.meta.env.VITE_SUPABASE_URL;
+// ── Use Vite/Vercel proxy to bypass DNS issues ─────────────────────────────────────
+// Instead of the user's browser trying to resolve the Supabase domain (which fails 
+// on many ISPs due to stale DNS caching or blocking), we proxy requests through our 
+// own domain. Vite handles this locally, and vercel.json handles it in production.
+const supabaseUrl = window.location.origin + '/supabase-api';
 
-console.log(`[Supabase] Mode: ${isDev ? 'DEV (proxy)' : 'PROD (direct)'}, URL: ${supabaseUrl}`);
+console.log(`[Supabase] Mode: PROXIED via ${supabaseUrl}`);
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     realtime: {
