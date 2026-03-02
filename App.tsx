@@ -297,16 +297,19 @@ const App: React.FC = () => {
     }));
   };
 
-  const handleDeleteColumn = (sheetId: string, column: string) => {
+  const handleDeleteColumn = (sheetId: string, colIndex: number) => {
     const sheet = sheetsRef.current.find(s => s.id === sheetId);
     if (!sheet) return;
 
-    const newColumns = sheet.columns.filter(c => c !== column);
-    syncDeleteColumn(sheetId, newColumns, column);
+    const targetCol = sheet.columns[colIndex];
+    if (targetCol === undefined) return;
+
+    const newColumns = sheet.columns.filter((_, i) => i !== colIndex);
+    syncDeleteColumn(sheetId, newColumns, targetCol);
 
     setSheets(prev => prev.map(s => {
       if (s.id !== sheetId) return s;
-      const newData = s.data.map(row => { const r = { ...row }; delete r[column]; return r; });
+      const newData = s.data.map(row => { const r = { ...row }; delete r[targetCol]; return r; });
       return { ...s, columns: newColumns, data: newData };
     }));
   };

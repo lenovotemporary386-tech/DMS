@@ -8,7 +8,7 @@ interface SheetViewProps {
   onAddRow: (sheetId: string) => void;
   onDeleteRow: (sheetId: string, rowId: string) => void;
   onAddColumn: (sheetId: string) => void;
-  onDeleteColumn: (sheetId: string, column: string) => void;
+  onDeleteColumn: (sheetId: string, colIndex: number) => void;
   onRenameColumn: (sheetId: string, oldName: string, newName: string) => void;
   onRenameSheet: (sheetId: string, newName: string) => void;
 }
@@ -170,7 +170,7 @@ export const SheetView: React.FC<SheetViewProps> = ({
                       <button
                         onMouseDown={(e) => {
                           e.preventDefault();
-                          onDeleteColumn(sheet.id, col);
+                          onDeleteColumn(sheet.id, idx);
                         }}
                         className="ml-2 p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity z-30"
                         title="Delete Column"
