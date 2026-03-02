@@ -53,13 +53,25 @@ export function saveToLocalStorage(sheets: SheetData[]): void {
     }
 }
 
-export function loadFromLocalStorage(): SheetData[] | null {
-    try {
-        const raw = localStorage.getItem(LS_KEY);
-        return raw ? JSON.parse(raw) : null;
-    } catch {
-        return null;
+export function loadFromLocalStorage(): SheetData[] {
+    if (typeof window === 'undefined') return [];
+    const saved = localStorage.getItem('dms_sheets_backup');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved) as SheetData[];
+            // Patch missing IDs in legacy local storage data
+            return parsed.map(sheet => ({
+                ...sheet,
+                data: sheet.data.map(row => ({
+                    ...row,
+                    id: row.id || crypto.randomUUID()
+                }))
+            }));
+        } catch (e) {
+            console.error('Failed to parse local backup', e);
+        }
     }
+    return [];
 }
 
 // ── Supabase Schema Init ──────────────────────────────────────────────────────
@@ -141,10 +153,10 @@ export async function loadSheetsFromSupabase(): Promise<SheetData[] | null> {
             }
 
             sheets.push({
-                id: sm.id as string,
-                name: sm.table_name as string,
+                id: sm.id,
+                name: sm.table_name || 'Untitled Sheet',
                 columns: finalColumns,
-                data: (rows ?? []).map((r: any) => ({ ...r, id: String(r.id) } as SheetRow))
+                data: rows ? rows.map((r: any) => ({ ...r, id: r.id || crypto.randomUUID() })) : [],
             });
         }
 

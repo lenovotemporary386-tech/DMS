@@ -6,7 +6,7 @@ interface SheetViewProps {
   sheet: SheetData;
   onUpdateCell: (sheetId: string, rowId: string, column: string, value: string) => void;
   onAddRow: (sheetId: string) => void;
-  onDeleteRow: (sheetId: string, rowId: string) => void;
+  onDeleteRow: (sheetId: string, rowIndex: number) => void;
   onAddColumn: (sheetId: string) => void;
   onDeleteColumn: (sheetId: string, colIndex: number) => void;
   onRenameColumn: (sheetId: string, oldName: string, newName: string) => void;
@@ -200,10 +200,10 @@ export const SheetView: React.FC<SheetViewProps> = ({
               ) : (
                 sheet.data.map((row, rowIdx) => (
                   <tr
-                    key={row.id}
+                    key={row.id || `row-${rowIdx}`}
                     className="group hover:bg-purple-50/30 transition-colors"
                     style={{
-                      height: rowHeights[row.id] || 40
+                      height: row.id ? (rowHeights[row.id] || 40) : 40
                     }}
                   >
                     {/* Row Number / Header */}
@@ -216,8 +216,11 @@ export const SheetView: React.FC<SheetViewProps> = ({
                       />
                       {/* Delete Row Button - Shown on hover */}
                       <button
-                        onClick={() => onDeleteRow(sheet.id, row.id)}
-                        className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-50 rounded"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          onDeleteRow(sheet.id, rowIdx);
+                        }}
+                        className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-50 z-30 rounded"
                         title="Delete Row"
                       >
                         <Trash2 size={12} />

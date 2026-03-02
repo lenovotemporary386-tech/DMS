@@ -275,11 +275,17 @@ const App: React.FC = () => {
     setSheets(prev => prev.map(s => s.id === sheetId ? { ...s, data: [...s.data, newRow] } : s));
   };
 
-  const handleDeleteRow = (sheetId: string, rowId: string) => {
-    syncDeleteRow(sheetId, rowId);
+  const handleDeleteRow = (sheetId: string, rowIndex: number) => {
     setSheets(prev => prev.map(sheet => {
       if (sheet.id !== sheetId) return sheet;
-      return { ...sheet, data: sheet.data.filter(row => row.id !== rowId) };
+
+      const targetRow = sheet.data[rowIndex];
+      if (!targetRow) return sheet;
+
+      syncDeleteRow(sheetId, String(targetRow.id));
+
+      const newData = sheet.data.filter((_, i) => i !== rowIndex);
+      return { ...sheet, data: newData };
     }));
   };
 
