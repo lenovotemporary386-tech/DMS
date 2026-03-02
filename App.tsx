@@ -21,6 +21,7 @@ import {
   syncUpdateValue,
   saveToLocalStorage,
   syncRenameTable,
+  syncUpsertRowsBatch,
 } from './services/supabaseData';
 
 // No initial sample data — all tables are loaded from Supabase (or localStorage fallback)
@@ -344,6 +345,39 @@ const App: React.FC = () => {
     createTable('Untitled Database', ['Column A', 'Column B']);
   };
 
+  const handleImportData = async (sheetId: string, parsedData: any[], parsedColumns: string[]) => {
+    const sheet = sheetsRef.current.find(s => s.id === sheetId);
+    if (!sheet) return;
+
+    // 1. Identify and add missing columns
+    const missingColumns = parsedColumns.filter(col => !sheet.columns.includes(col));
+    let currentColumns = [...sheet.columns];
+
+    for (const newCol of missingColumns) {
+      currentColumns.push(newCol);
+      await syncAddColumn(sheetId, currentColumns, newCol);
+    }
+
+    // 2. Ensure each row has an ID
+    const newRowsToInsert = parsedData.map(row => ({
+      ...row,
+      id: row.id || crypto.randomUUID()
+    }));
+
+    // 3. Batch upload to Supabase
+    await syncUpsertRowsBatch(sheetId, newRowsToInsert);
+
+    // 4. Update Local State
+    setSheets(prev => prev.map(s => {
+      if (s.id !== sheetId) return s;
+      return {
+        ...s,
+        columns: currentColumns,
+        data: [...s.data, ...newRowsToInsert]
+      };
+    }));
+  };
+
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -370,6 +404,7 @@ const App: React.FC = () => {
           onDeleteColumn={handleDeleteColumn}
           onRenameColumn={handleRenameColumn}
           onRenameSheet={handleRenameSheet}
+          onImportData={handleImportData}
         />
       );
     }

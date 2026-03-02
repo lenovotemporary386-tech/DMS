@@ -353,6 +353,19 @@ export async function syncUpsertRow(sheetId: string, rowData: any): Promise<void
     }
 }
 
+export async function syncUpsertRowsBatch(sheetId: string, rowsData: any[]): Promise<void> {
+    if (!_isConnected || rowsData.length === 0) return;
+    try {
+        const pgTableName = await getPgTableForSheet(sheetId);
+        if (!pgTableName) return;
+        // Supabase upsert accepts an array of objects
+        const { error } = await supabase.from(pgTableName).upsert(rowsData);
+        if (error) throw error;
+    } catch (e) {
+        console.error('[Supabase] syncUpsertRowsBatch failed', e);
+    }
+}
+
 export async function syncDeleteRow(sheetId: string, rowId: string): Promise<void> {
     if (!_isConnected) return;
     try {

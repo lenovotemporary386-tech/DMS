@@ -11,6 +11,7 @@ interface SheetViewProps {
   onDeleteColumn: (sheetId: string, colIndex: number) => void;
   onRenameColumn: (sheetId: string, oldName: string, newName: string) => void;
   onRenameSheet: (sheetId: string, newName: string) => void;
+  onImportData?: (sheetId: string, parsedData: any[], parsedColumns: string[]) => void;
 }
 
 export const SheetView: React.FC<SheetViewProps> = ({
@@ -21,7 +22,8 @@ export const SheetView: React.FC<SheetViewProps> = ({
   onAddColumn,
   onDeleteColumn,
   onRenameColumn,
-  onRenameSheet
+  onRenameSheet,
+  onImportData
 }) => {
   // Resizing state
   const [colWidths, setColWidths] = useState<Record<string, number>>({});
@@ -107,7 +109,67 @@ export const SheetView: React.FC<SheetViewProps> = ({
             </div>
           </div>
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-white text-slate-600 rounded-xl text-sm border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm">
+            {onImportData && (
+              <label className="flex items-center gap-2 px-4 py-2 bg-white text-slate-600 rounded-xl text-sm border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm cursor-pointer">
+                <Download size={14} className="rotate-180" /> Import
+                <input
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const text = event.target?.result as string;
+                      if (!text) return;
+
+                      // Very basic CSV parser (doesn't handle commas inside quotes well, but fine for simple cases)
+                      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+                      if (lines.length < 1) return;
+
+                      const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+                      const parsedData = lines.slice(1).map(line => {
+                        const values = line.split(',');
+                        const rowObj: any = {};
+                        headers.forEach((header, i) => {
+                          const valStr = values[i] || '';
+                          rowObj[header] = valStr.replace(/^"|"$/g, '').replace(/""/g, '"').trim();
+                        });
+                        return rowObj;
+                      });
+
+                      onImportData(sheet.id, parsedData, headers);
+                      // Reset input
+                      e.target.value = '';
+                    };
+                    reader.readAsText(file);
+                  }}
+                />
+              </label>
+            )}
+            <button
+              onClick={() => {
+                const headers = sheet.columns.join(',');
+                const rows = sheet.data.map(row =>
+                  sheet.columns.map(col => {
+                    const val = row[col] !== undefined ? row[col] : (row[col.toLowerCase().replace(/\s/g, '_')] || '');
+                    // Basic escape for CSV
+                    return `"${String(val).replace(/"/g, '""')}"`;
+                  }).join(',')
+                ).join('\n');
+                const csvData = `${headers}\n${rows}`;
+                const blob = new Blob([csvData], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${sheet.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-white text-slate-600 rounded-xl text-sm border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm"
+            >
               <Download size={14} /> Export
             </button>
             <button
