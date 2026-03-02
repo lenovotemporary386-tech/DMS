@@ -153,7 +153,7 @@ export const SheetView: React.FC<SheetViewProps> = ({
                 <th className="px-2 py-4 w-12 border-r border-slate-200 bg-slate-50 sticky left-0 z-20"></th>
                 {sheet.columns.map((col, idx) => (
                   <th
-                    key={idx}
+                    key={col}
                     className="px-6 py-4 relative group border-r border-slate-200 bg-slate-50 z-10"
                     style={{
                       width: colWidths[col] || 192,
@@ -229,7 +229,7 @@ export const SheetView: React.FC<SheetViewProps> = ({
 
                       return (
                         <td
-                          key={idx}
+                          key={col}
                           className="px-6 border-r border-transparent hover:border-slate-100"
                           style={{
                             width: colWidths[col] || 192,
