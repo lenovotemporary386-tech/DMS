@@ -168,8 +168,11 @@ export const SheetView: React.FC<SheetViewProps> = ({
                         className="bg-transparent text-xs uppercase font-bold text-slate-500 tracking-wider focus:outline-none focus:text-purple-600 w-full"
                       />
                       <button
-                        onClick={() => onDeleteColumn(sheet.id, col)}
-                        className="ml-2 p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          onDeleteColumn(sheet.id, col);
+                        }}
+                        className="ml-2 p-1 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity z-30"
                         title="Delete Column"
                       >
                         <Trash2 size={12} />
